@@ -17,11 +17,11 @@ var inputFile = process.argv[2];
 var significantDistance = process.argv[4];
 
 
-started = Date.now();
+stats.started = Date.now();
 
+var fs = require('fs');
 var LineByLineReader = require('line-by-line'),
     lr = new LineByLineReader(inputFile);
-var fs = require('fs');
 
 
 
@@ -94,8 +94,8 @@ lr.on('line', function (line) {
 });
 
 lr.on('end', function () {
-	console.log('Seconds:' + ((Date.now()-stats.started) / 1000));
-	console.log('Processed records:' + stats.processed);
-	console.log('Total retained:' + stats.outputted);
+	console.log('Processing time (s):' + ((Date.now()-stats.started) / 1000));
+	console.log('Number of records in input file:' + stats.processed);
+	console.log('Total records retained:' + stats.outputted);
 	console.log('Percentage retained:' + Number.parseFloat(stats.outputted/stats.processed * 100).toFixed(2));
 });
