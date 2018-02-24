@@ -1,14 +1,20 @@
 //1043224093,FLT141,-34.98806,138.57323,0,0,2018-01-01 11:06:24.0000000 +10:30,2018-01-01 11:06:32.8295340 +10:30,116
 
 var vehicles = [];
-var processed = 0;
-var outputted = 0;
-var started;
+var stats = {};
+	stats.processed = 0;
+	stats.outputted = 0;
+	stats.started;
+	
+var outputFile = process.argv[3];
+var inputFile = process.argv[2];
+var significantDistance = process.argv[4];
+
 
 started = Date.now();
 
 var LineByLineReader = require('line-by-line'),
-    lr = new LineByLineReader('avl.csv');
+    lr = new LineByLineReader(inputFile);
 var fs = require('fs');
 
 
@@ -39,9 +45,9 @@ function getVehicle(fleet){
 
 
 function pushPosition(record){
-	outputted++;
+	stats.outputted++;
 	record.join(",")
-	fs.appendFile('output.csv', record.join(",") + '\r\n', function (err) {})
+	fs.appendFile(outputFile, record.join(",") + '\r\n', function (err) {})
 }
 
 
@@ -53,10 +59,12 @@ function createVehicle(record){
 }
 
 function processPosition(record, fleet){
-	processed++;
-	if (getDistance(record[2], record[3], fleet.lat, fleet.lng) > 0.05){
+	stats.processed++;
+	if (getDistance(record[2], record[3], fleet.lat, fleet.lng) > significantDistance){
 		pushPosition(record);
 	} 
+	fleet.lat = record[2];
+	fleet.lng = record[3];
 }
 
 
@@ -67,23 +75,21 @@ function processRecord(line){
 	if (!fleet){
 		fleet = createVehicle(record);
 	}
+	
 	processPosition(record, fleet);
 }
 
 
 lr.on('error', function (err) {
-	// 'err' contains error object
 });
 
 lr.on('line', function (line) {
 	processRecord(line);
-
-
 });
 
 lr.on('end', function () {
-	console.log('Seconds:' + (Date.now()-started / 1000));
-	console.log('Processed records:' + processed);
-	console.log('Total retained:' + outputted);
-	console.log('Percentage retained:' + outputted/processed * 100);
+	console.log('Seconds:' + ((Date.now()-stats.started) / 1000));
+	console.log('Processed records:' + stats.processed);
+	console.log('Total retained:' + stats.outputted);
+	console.log('Percentage retained:' + Number.parseFloat(stats.outputted/stats.processed * 100).toFixed(2));
 });
